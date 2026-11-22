@@ -30,7 +30,9 @@ jobs:
         with:
           languages: csharp
           build-mode: manual
-          queries: security-and-quality
+          # Security queries only: code quality is enforced at build time
+          # (analyzers, warnings as errors, dotnet format).
+          queries: security-extended
 
       - run: dotnet build CocktailAgent.slnx -c Release
 

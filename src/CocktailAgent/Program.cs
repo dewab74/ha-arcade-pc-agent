@@ -28,7 +28,7 @@ try
     using var quit = new CancellationTokenSource();
     AppDomain.CurrentDomain.ProcessExit += (_, _) => quit.Cancel();
     using var tray = new TrayApp(version, files, log);
-    var settingsSaved = new SemaphoreSlim(0);
+    using var settingsSaved = new SemaphoreSlim(0);
     tray.SettingsSaved += (_, _) => settingsSaved.Release();
     tray.QuitRequested += (_, _) => quit.Cancel();
     tray.Start();
