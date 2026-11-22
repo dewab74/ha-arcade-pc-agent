@@ -55,3 +55,9 @@ TestResults/
 # ---- direnv --------------------------------------------------------------
 .envrc
 .direnv/
+
+# ---- Keep ----------------------------------------------------------------
+# The tray icons. A common global ignore for macOS's "Icon\r" file, `Icon?`,
+# also matches this folder name.
+!src/CocktailAgent/Icons/
+!src/CocktailAgent/Icons/*.ico
