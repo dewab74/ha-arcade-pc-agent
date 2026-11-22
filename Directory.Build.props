@@ -13,9 +13,9 @@
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
     <RestoreLockedMode Condition="'$(CI)' == 'true'">true</RestoreLockedMode>
-    <Authors>ha-cocktail-agent contributors</Authors>
-    <Copyright>Copyright (c) 2026 ha-cocktail-agent contributors</Copyright>
-    <RepositoryUrl>https://github.com/dewab74/ha-cocktail-agent</RepositoryUrl>
+    <Authors>ha-arcade-pc-agent contributors</Authors>
+    <Copyright>Copyright (c) 2026 ha-arcade-pc-agent contributors</Copyright>
+    <RepositoryUrl>https://github.com/dewab74/ha-arcade-pc-agent</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Version>0.0.0-dev</Version>
   </PropertyGroup>

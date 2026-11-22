@@ -104,19 +104,19 @@ repos:
     hooks:
       - id: dotnet-format
         name: dotnet format (verify)
-        entry: dotnet format CocktailAgent.slnx --verify-no-changes
+        entry: dotnet format ArcadePcAgent.slnx --verify-no-changes
         language: system
         files: \.(cs|csproj|props|slnx)$|^\.editorconfig$
         pass_filenames: false
       - id: dotnet-build
         name: dotnet build (warnings as errors)
-        entry: dotnet build CocktailAgent.slnx -warnaserror --nologo -v quiet
+        entry: dotnet build ArcadePcAgent.slnx -warnaserror --nologo -v quiet
         language: system
         files: \.(cs|csproj|props|slnx|json)$|^\.editorconfig$
         pass_filenames: false
       - id: dotnet-test
         name: dotnet test
-        entry: dotnet test tests/CocktailAgent.Core.Tests --nologo -v quiet
+        entry: dotnet test tests/ArcadePcAgent.Core.Tests --nologo -v quiet
         language: system
         files: \.(cs|csproj|props|slnx)$
         pass_filenames: false

@@ -4,16 +4,16 @@
 
 | What | Where |
 | --- | --- |
-| Executable | `C:\Program Files\CocktailAgent\CocktailAgent.exe`: one file, self-contained (no .NET runtime needed) |
-| Start | Scheduled task **Cocktail agent**: at sign-in, as that user, **elevated**, no time limit, restarts every minute after a crash. It runs in the user's desktop session because Windows audio and the display are per session. It is elevated because LaunchBox/BigBox usually are, and a non-elevated process can neither watch nor close an elevated one |
-| Settings | `%LOCALAPPDATA%\CocktailAgent\agent.json` |
-| MQTT password | `%LOCALAPPDATA%\CocktailAgent\agent.password`, DPAPI-encrypted for that Windows user |
-| CA | Optional; `caFile` in the settings (the SSH installer puts it at `%LOCALAPPDATA%\CocktailAgent\ca.pem`) |
-| Log | `%LOCALAPPDATA%\CocktailAgent\agent.log`, rotates at 1 MB |
+| Executable | `C:\Program Files\ArcadePcAgent\ArcadePcAgent.exe`: one file, self-contained (no .NET runtime needed) |
+| Start | Scheduled task **Arcade PC agent**: at sign-in, as that user, **elevated**, no time limit, restarts every minute after a crash. It runs in the user's desktop session because Windows audio and the display are per session. It is elevated because LaunchBox/BigBox usually are, and a non-elevated process can neither watch nor close an elevated one |
+| Settings | `%LOCALAPPDATA%\ArcadePcAgent\agent.json` |
+| MQTT password | `%LOCALAPPDATA%\ArcadePcAgent\agent.password`, DPAPI-encrypted for that Windows user |
+| CA | Optional; `caFile` in the settings (the SSH installer puts it at `%LOCALAPPDATA%\ArcadePcAgent\ca.pem`) |
+| Log | `%LOCALAPPDATA%\ArcadePcAgent\agent.log`, rotates at 1 MB |
 | Single instance | A second copy exits at once |
 
-`src/CocktailAgent.Core` holds MQTT, discovery, commands, settings, health
-logic and the TLS check, and is tested on any OS. `src/CocktailAgent` is the
+`src/ArcadePcAgent.Core` holds MQTT, discovery, commands, settings, health
+logic and the TLS check, and is tested on any OS. `src/ArcadePcAgent` is the
 Windows side: Core Audio, process control, display power, input and the tray
 icon.
 
@@ -26,12 +26,13 @@ Settings window and the installer write.
 | Key | Default | Meaning |
 | --- | --- | --- |
 | `host` | (required) | Broker host |
-| `port` | `8883` | Broker port |
-| `useTls` | `true` | TLS to the broker |
-| `username` | (required) | MQTT user |
+| `port` | `1883` | Broker port (usually 8883 with TLS) |
+| `useTls` | `false` | TLS to the broker |
+| `verifyCertificate` | `true` | With TLS, check the broker's certificate. Set `false` only for a self-signed certificate you can't give as `caFile`: still encrypted, but anyone in the network path could pose as the broker. The agent logs a warning |
+| `username` | none | MQTT user; leave it out for a broker without authentication |
 | `caFile` | none | PEM file of a private CA. The broker certificate must chain to it, and the host name is checked. Without it, the Windows trust store decides. Revocation is not checked: private CAs such as step-ca or a self-made Mosquitto CA usually publish no CRL or OCSP |
-| `nodeId` | `cocktail_pc` | Topic segment, Home Assistant device identifier and `unique_id` prefix (`a-z`, `0-9`, `_`) |
-| `deviceName` | `Cocktail PC` | Home Assistant device name |
+| `nodeId` | `arcade_pc` | Topic segment, Home Assistant device identifier and `unique_id` prefix (`a-z`, `0-9`, `_`) |
+| `deviceName` | `Arcade PC` | Home Assistant device name |
 | `suggestedArea` | none | Area Home Assistant suggests for the device |
 | `discoveryPrefix` | `homeassistant` | Home Assistant's discovery prefix |
 | `muteEntityId` | `switch.<nodeId>_mute` | Entity id Home Assistant creates for mute. Set it to keep the id of an entity the agent replaces (dashboards, automations, voice assistants) |
@@ -47,15 +48,15 @@ Example:
   "host": "homeassistant.local",
   "port": 8883,
   "useTls": true,
-  "username": "cocktail-agent",
-  "caFile": "C:\\Users\\arcade\\AppData\\Local\\CocktailAgent\\ca.pem",
+  "username": "arcade-pc-agent",
+  "caFile": "C:\\Users\\arcade\\AppData\\Local\\ArcadePcAgent\\ca.pem",
   "suggestedArea": "Game Room"
 }
 ```
 
 ## MQTT
 
-Topics are under `cocktail-agent/<nodeId>/`:
+Topics are under `arcade-pc-agent/<nodeId>/`:
 
 | Topic | Direction | Payload |
 | --- | --- | --- |
@@ -141,14 +142,14 @@ any wake is accepted.
 
 ## Install over SSH
 
-From macOS or Linux, `scripts/install-cocktail-agent.sh` builds, tests and
+From macOS or Linux, `scripts/install-arcade-pc-agent.sh` builds, tests and
 installs on the PC over SSH. The PC needs the OpenSSH server, with
 PowerShell as its default shell, and an administrator login: the signed-in
 user, because the settings and password belong to that user.
 
 ```bash
 cp .env.example .env      # SSH login of the PC, broker, optional settings
-bash scripts/install-cocktail-agent.sh
+bash scripts/install-arcade-pc-agent.sh
 ```
 
 The script:
@@ -160,12 +161,12 @@ The script:
 4. if `AGENT_MQTT_PASSWORD_COMMAND` is set (a password manager or Vault
    command), runs it and pipes the password over SSH stdin, never on a
    command line;
-5. runs `install-cocktail-agent.ps1 -FromStaging`. That checks the exe's
+5. runs `install-arcade-pc-agent.ps1 -FromStaging`. That checks the exe's
    hash, installs, DPAPI-encrypts the password, registers the task, and
    only returns once the agent has logged `Connected`.
 
-`scripts/cocktail-remote.sh` is the SSH helper it uses. It logs in with SSH
-keys, or with `COCKTAIL_PASSWORD` through `sshpass`. Host keys are trusted on
+`scripts/arcade-pc-remote.sh` is the SSH helper it uses. It logs in with SSH
+keys, or with `ARCADE_PC_PASSWORD` through `sshpass`. Host keys are trusted on
 first use.
 
 ## Behaviour worth knowing

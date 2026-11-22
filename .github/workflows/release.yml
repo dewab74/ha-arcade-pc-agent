@@ -38,19 +38,29 @@ jobs:
           Set-Content -Path release-notes.md -Value $notes -Encoding utf8
           "version=$version" >> $env:GITHUB_OUTPUT
 
-      - run: dotnet restore CocktailAgent.slnx
+      - run: dotnet restore ArcadePcAgent.slnx
 
-      - run: dotnet build CocktailAgent.slnx --no-restore -c Release -warnaserror
+      - run: dotnet build ArcadePcAgent.slnx --no-restore -c Release -warnaserror
 
-      - run: dotnet test tests/CocktailAgent.Core.Tests --no-build -c Release
+      - run: dotnet test tests/ArcadePcAgent.Core.Tests --no-build -c Release
 
       - name: Publish
         shell: pwsh
         run: |
-          dotnet publish src/CocktailAgent -c Release -o artifacts/publish -p:Version="${{ steps.version.outputs.version }}"
+          dotnet publish src/ArcadePcAgent -c Release -o artifacts/publish -p:Version="${{ steps.version.outputs.version }}"
           New-Item -ItemType Directory -Force dist | Out-Null
-          Copy-Item artifacts/publish/CocktailAgent.exe dist/
-          Copy-Item scripts/install-cocktail-agent.ps1 dist/
+          Copy-Item artifacts/publish/ArcadePcAgent.exe dist/
+          Copy-Item scripts/install-arcade-pc-agent.ps1 dist/
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          ./scripts/build-installer.ps1 -Version "${{ steps.version.outputs.version }}"
+          Copy-Item "artifacts/installer/ArcadePcAgent-Setup-${{ steps.version.outputs.version }}.exe" dist/
+
+      - name: Checksums
+        shell: pwsh
+        run: |
           Push-Location dist
           # LF line endings, so `sha256sum -c` / `shasum -a 256 -c` work on Linux and macOS.
           $lines = Get-ChildItem -File | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.Name -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name }
@@ -61,13 +71,14 @@ jobs:
       - uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
-            dist/CocktailAgent.exe
-            dist/install-cocktail-agent.ps1
+            dist/ArcadePcAgent-Setup-${{ steps.version.outputs.version }}.exe
+            dist/ArcadePcAgent.exe
+            dist/install-arcade-pc-agent.ps1
 
       - name: Create the GitHub release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create $env:GITHUB_REF_NAME dist/CocktailAgent.exe dist/install-cocktail-agent.ps1 dist/SHA256SUMS `
-            --title "ha-cocktail-agent ${{ steps.version.outputs.version }}" --notes-file release-notes.md --verify-tag
+          gh release create $env:GITHUB_REF_NAME "dist/ArcadePcAgent-Setup-${{ steps.version.outputs.version }}.exe" dist/ArcadePcAgent.exe dist/install-arcade-pc-agent.ps1 dist/SHA256SUMS `
+            --title "ha-arcade-pc-agent ${{ steps.version.outputs.version }}" --notes-file release-notes.md --verify-tag

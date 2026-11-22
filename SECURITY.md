@@ -3,7 +3,7 @@
 ## Reporting a vulnerability
 
 Please report security problems privately through
-[GitHub private vulnerability reporting](https://github.com/dewab74/ha-cocktail-agent/security/advisories/new),
+[GitHub private vulnerability reporting](https://github.com/dewab74/ha-arcade-pc-agent/security/advisories/new),
 not in a public issue. Expect an acknowledgement within a week.
 
 ## What counts

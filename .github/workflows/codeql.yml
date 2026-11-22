@@ -34,7 +34,7 @@ jobs:
           # (analyzers, warnings as errors, dotnet format).
           queries: security-extended
 
-      - run: dotnet build CocktailAgent.slnx -c Release
+      - run: dotnet build ArcadePcAgent.slnx -c Release
 
       - uses: github/codeql-action/analyze@v4
         with:

@@ -29,25 +29,27 @@ jobs:
           global-json-file: global.json
 
       # Locked mode (CI=true in Directory.Build.props): a stale packages.lock.json fails here.
-      - run: dotnet restore CocktailAgent.slnx
+      - run: dotnet restore ArcadePcAgent.slnx
 
-      - run: dotnet build CocktailAgent.slnx --no-restore -c Release -warnaserror
+      - run: dotnet build ArcadePcAgent.slnx --no-restore -c Release -warnaserror
 
-      - run: dotnet test tests/CocktailAgent.Core.Tests --no-build -c Release
+      - run: dotnet test tests/ArcadePcAgent.Core.Tests --no-build -c Release
 
       # The exe a release would ship, for testing a PR on a real PC.
-      - name: Publish the exe
+      - name: Publish the exe and build the installer
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $version = (Get-Content VERSION -Raw).Trim()
-          dotnet publish src/CocktailAgent -c Release -o artifacts/publish -p:Version="$version-ci.${{ github.run_number }}"
+          $version = "$((Get-Content VERSION -Raw).Trim())-ci.${{ github.run_number }}"
+          dotnet publish src/ArcadePcAgent -c Release -o artifacts/publish -p:Version="$version"
+          ./scripts/build-installer.ps1 -Version $version
 
       - uses: actions/upload-artifact@v7
         if: runner.os == 'Windows'
         with:
-          name: CocktailAgent-${{ github.sha }}
+          name: ArcadePcAgent-${{ github.sha }}
           path: |
-            artifacts/publish/CocktailAgent.exe
-            scripts/install-cocktail-agent.ps1
+            artifacts/installer/ArcadePcAgent-Setup-*.exe
+            artifacts/publish/ArcadePcAgent.exe
+            scripts/install-arcade-pc-agent.ps1
           retention-days: 14

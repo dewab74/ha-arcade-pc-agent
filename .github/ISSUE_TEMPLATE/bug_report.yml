@@ -32,5 +32,5 @@ body:
     id: logs
     attributes:
       label: Agent log
-      description: "%LOCALAPPDATA%\\CocktailAgent\\agent.log (tray icon > Open log). Remove host names you do not want public; the log never contains the password."
+      description: "%LOCALAPPDATA%\\ArcadePcAgent\\agent.log (tray icon > Open log). Remove host names you do not want public; the log never contains the password."
       render: text

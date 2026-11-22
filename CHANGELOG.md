@@ -6,6 +6,34 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-22
+
+### Added
+
+- `ArcadePcAgent-Setup-<version>.exe`, an Inno Setup installer built by CI.
+  It has a wizard with a broker page, and runs fully silent with switches
+  (`/HOST=`, `/PORT=`, `/TLS=`, `/VERIFY=`, `/USERNAME=`, `/PASSWORDFILE=`,
+  `/CAFILE=`, `/NODEID=`, `/DEVICENAME=`, `/AREA=`, `/LAUNCHBOXDIR=`…). A
+  silent setup that fails exits with 1.
+- `verifyCertificate` (default `true`): turn it off for a self-signed broker
+  certificate. Also in Settings, as a checkbox.
+- `install-arcade-pc-agent.ps1` takes `-SettingsJson`, `-CaPem` and
+  `-PasswordFile`, for scripted installs.
+
+### Changed
+
+- **Renamed** from "Cocktail agent" to **Arcade PC agent**. This affects the
+  repo (`ha-arcade-pc-agent`), the exe (`ArcadePcAgent.exe`), the folders
+  (`C:\Program Files\ArcadePcAgent`, `%LOCALAPPDATA%\ArcadePcAgent`), the
+  scheduled task, and the MQTT topics (`arcade-pc-agent/<nodeId>/…`). The
+  default node id is `arcade_pc` and the device "Arcade PC". To keep the
+  Home Assistant entities of a 0.4.0 install, set `nodeId` to its old value.
+  Then remove the old install: end and delete the task "Cocktail agent",
+  delete `C:\Program Files\CocktailAgent`, and copy your settings from
+  `%LOCALAPPDATA%\CocktailAgent`.
+- Plain MQTT on port 1883 by default (was TLS on 8883), matching Home
+  Assistant's Mosquitto app out of the box. `username` is optional.
+
 ## [0.4.0] - 2026-11-22
 
 First public release.

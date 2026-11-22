@@ -2,7 +2,7 @@
 
 The agent needs no YAML: its device and entities come from MQTT discovery.
 These automations are optional extras. They assume the default node id
-`cocktail_pc`; replace `notify.notify` with your own notifier. The ones
+`arcade_pc`; replace `notify.notify` with your own notifier. The ones
 marked *launchbox-mqtt* also use the
 [launchbox-mqtt](https://github.com/dewab74/launchbox-mqtt) plugin's entities
 (its node id here is `arcade`).
@@ -29,17 +29,17 @@ automation:
         entity_id: binary_sensor.launchbox_arcade_playing
         state: "off"
       - condition: state
-        entity_id: switch.cocktail_pc_screen
+        entity_id: switch.arcade_pc_screen
         state: "on"
         for: "00:20:00"
       - condition: template
         value_template: >-
-          {% set last = states('sensor.cocktail_pc_last_input') | as_datetime %}
+          {% set last = states('sensor.arcade_pc_last_input') | as_datetime %}
           {{ last is not none and now() - last > timedelta(minutes=20) }}
     actions:
       - action: switch.turn_off
         target:
-          entity_id: switch.cocktail_pc_screen
+          entity_id: switch.arcade_pc_screen
 
   - alias: Arcade - screen on when a game starts
     mode: single
@@ -49,12 +49,12 @@ automation:
         to: "on"
     conditions:
       - condition: state
-        entity_id: switch.cocktail_pc_screen
+        entity_id: switch.arcade_pc_screen
         state: "off"
     actions:
       - action: switch.turn_on
         target:
-          entity_id: switch.cocktail_pc_screen
+          entity_id: switch.arcade_pc_screen
 ```
 
 ## Alert on a stuck control
@@ -67,14 +67,14 @@ automation:
   - alias: Arcade - stuck input
     triggers:
       - trigger: state
-        entity_id: binary_sensor.cocktail_pc_stuck_input
+        entity_id: binary_sensor.arcade_pc_stuck_input
         to: "on"
     actions:
       - action: notify.notify
         data:
           title: Arcade input stuck
           message: >-
-            {{ state_attr('binary_sensor.cocktail_pc_stuck_input', 'stuck_inputs')
+            {{ state_attr('binary_sensor.arcade_pc_stuck_input', 'stuck_inputs')
                | default([], true) | join('; ') or 'An input' }} is held down.
 ```
 
@@ -89,20 +89,20 @@ automation:
     triggers:
       - trigger: template
         value_template: >-
-          {{ state_attr('sensor.cocktail_pc_disk_free', 'percent_free') | float(100) < 10 }}
+          {{ state_attr('sensor.arcade_pc_disk_free', 'percent_free') | float(100) < 10 }}
         for: "00:10:00"
     actions:
       - action: persistent_notification.create
         data:
           notification_id: arcade_low_disk
           title: Arcade PC disk almost full
-          message: "{{ states('sensor.cocktail_pc_disk_free') }} GB free on C:."
+          message: "{{ states('sensor.arcade_pc_disk_free') }} GB free on C:."
 
   - alias: Arcade - low disk cleared
     triggers:
       - trigger: template
         value_template: >-
-          {{ state_attr('sensor.cocktail_pc_disk_free', 'percent_free') | float(0) > 12 }}
+          {{ state_attr('sensor.arcade_pc_disk_free', 'percent_free') | float(0) > 12 }}
     actions:
       - action: persistent_notification.dismiss
         data:
@@ -123,7 +123,7 @@ automation:
     mode: single
     triggers:
       - trigger: state
-        entity_id: switch.cocktail_pc_screen
+        entity_id: switch.arcade_pc_screen
         to: unavailable
         for: "00:02:00"
     conditions:

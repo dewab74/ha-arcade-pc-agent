@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ArcadePcAgent.Core/ArcadePcAgent.Core.csproj" />
+    <Project Path="src/ArcadePcAgent/ArcadePcAgent.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ArcadePcAgent.Core.Tests/ArcadePcAgent.Core.Tests.csproj" />
+  </Folder>
+</Solution>

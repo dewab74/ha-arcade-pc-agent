@@ -15,15 +15,16 @@ Thanks for helping. Issues and pull requests are welcome.
    pre-commit run --all-files
    ```
 
-3. Build and test:
+3. Build and test (`scripts/build-installer.ps1` builds the installer on
+   Windows with [Inno Setup 6](https://jrsoftware.org/isinfo.php)):
 
    ```bash
-   dotnet build CocktailAgent.slnx
-   dotnet test tests/CocktailAgent.Core.Tests
+   dotnet build ArcadePcAgent.slnx
+   dotnet test tests/ArcadePcAgent.Core.Tests
    ```
 
-`CocktailAgent.Core` and its tests build and run on Windows, macOS and
-Linux. The Windows app (`src/CocktailAgent`, WinForms tray, Core Audio) also
+`ArcadePcAgent.Core` and its tests build and run on Windows, macOS and
+Linux. The Windows app (`src/ArcadePcAgent`, WinForms tray, Core Audio) also
 builds on any OS, but only runs on Windows.
 
 ## Rules
@@ -44,11 +45,11 @@ builds on any OS, but only runs on Windows.
 
 | Workflow | Runs | Does |
 | --- | --- | --- |
-| `ci.yml` | push to `main`, pull requests | Locked restore, build with warnings as errors, and tests on Ubuntu and Windows. Publishes the exe on Windows as a build artifact |
+| `ci.yml` | push to `main`, pull requests | Locked restore, build with warnings as errors, and tests on Ubuntu and Windows. On Windows it also publishes the exe and builds the Inno Setup installer, uploaded as build artifacts |
 | `pre-commit.yml` | push, pull requests | The same hooks as your machine, as a backstop for `--no-verify` |
 | `codeql.yml` | push, pull requests, weekly | CodeQL security analysis of the C# |
 | `dependency-review.yml` | pull requests | Blocks new dependencies with known vulnerabilities or incompatible licenses |
-| `release.yml` | tag `v*` | Builds, tests, publishes; then attaches the exe, the installer and `SHA256SUMS` to a GitHub release with a build provenance attestation |
+| `release.yml` | tag `v*` | Builds, tests, publishes and builds the installer; then attaches `ArcadePcAgent-Setup-<version>.exe`, the exe, `install-arcade-pc-agent.ps1` and `SHA256SUMS` to a GitHub release, with build provenance attestations |
 
 Dependabot keeps NuGet packages and GitHub Actions current.
 
