@@ -1,0 +1,53 @@
+name: build and test
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    # Core is platform-neutral; Windows is where the agent actually runs.
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CI: "true"
+      DOTNET_NOLOGO: "true"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      # Locked mode (CI=true in Directory.Build.props): a stale packages.lock.json fails here.
+      - run: dotnet restore CocktailAgent.slnx
+
+      - run: dotnet build CocktailAgent.slnx --no-restore -c Release -warnaserror
+
+      - run: dotnet test tests/CocktailAgent.Core.Tests --no-build -c Release
+
+      # The exe a release would ship, for testing a PR on a real PC.
+      - name: Publish the exe
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          dotnet publish src/CocktailAgent -c Release -o artifacts/publish -p:Version="$version-ci.${{ github.run_number }}"
+
+      - uses: actions/upload-artifact@v7
+        if: runner.os == 'Windows'
+        with:
+          name: CocktailAgent-${{ github.sha }}
+          path: |
+            artifacts/publish/CocktailAgent.exe
+            scripts/install-cocktail-agent.ps1
+          retention-days: 14

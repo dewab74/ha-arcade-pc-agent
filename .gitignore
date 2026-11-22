@@ -1,0 +1,57 @@
+# ---- Universal -----------------------------------------------------------
+# Secrets: belt and braces. The hooks scan for leaked credentials, but the
+# cheapest leak to prevent is the file git never tracked in the first place.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+!**/testdata/**/*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+*.kdbx
+secrets.y*ml
+!secrets.example.y*ml
+credentials.json
+service-account*.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json.example
+.fleet/
+
+# Logs and scratch
+*.log
+tmp/
+.tmp/
+.cache/
+
+# ---- Shell ---------------------------------------------------------------
+*.bak
+*.orig
+shellcheck-report.*
+
+# ---- Docs ----------------------------------------------------------------
+_site/
+.docusaurus/
+site/
+
+# ---- .NET ----------------------------------------------------------------
+bin/
+obj/
+artifacts/
+TestResults/
+
+# ---- direnv --------------------------------------------------------------
+.envrc
+.direnv/

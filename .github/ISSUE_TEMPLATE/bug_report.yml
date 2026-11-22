@@ -1,0 +1,36 @@
+name: Bug report
+description: Something does not work as documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: input
+    id: agent-version
+    attributes:
+      label: Agent version
+      description: Tray icon > About, or the first line of agent.log.
+    validations:
+      required: true
+  - type: input
+    id: windows-version
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 25H2"
+    validations:
+      required: true
+  - type: input
+    id: broker
+    attributes:
+      label: MQTT broker and version
+      placeholder: "Mosquitto 2.0 (Home Assistant app)"
+  - type: textarea
+    id: logs
+    attributes:
+      label: Agent log
+      description: "%LOCALAPPDATA%\\CocktailAgent\\agent.log (tray icon > Open log). Remove host names you do not want public; the log never contains the password."
+      render: text

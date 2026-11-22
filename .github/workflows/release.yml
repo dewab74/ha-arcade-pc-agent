@@ -1,0 +1,72 @@
+# Tag vX.Y.Z on main -> build, test, publish, attest, GitHub release.
+name: release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write # create the release
+      id-token: write # sign the build provenance attestation
+      attestations: write
+    env:
+      CI: "true"
+      DOTNET_NOLOGO: "true"
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Check the tag against VERSION and CHANGELOG.md
+        id: version
+        shell: pwsh
+        run: |
+          $version = (Get-Content VERSION -Raw).Trim()
+          if ("v$version" -ne $env:GITHUB_REF_NAME) { throw "Tag $env:GITHUB_REF_NAME does not match VERSION $version" }
+          $notes = [regex]::Match((Get-Content CHANGELOG.md -Raw), "(?ms)^## \[$([regex]::Escape($version))\][^\n]*\n(.*?)(?=^## \[|\z)").Groups[1].Value.Trim()
+          if (-not $notes) { throw "CHANGELOG.md has no section for $version" }
+          Set-Content -Path release-notes.md -Value $notes -Encoding utf8
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - run: dotnet restore CocktailAgent.slnx
+
+      - run: dotnet build CocktailAgent.slnx --no-restore -c Release -warnaserror
+
+      - run: dotnet test tests/CocktailAgent.Core.Tests --no-build -c Release
+
+      - name: Publish
+        shell: pwsh
+        run: |
+          dotnet publish src/CocktailAgent -c Release -o artifacts/publish -p:Version="${{ steps.version.outputs.version }}"
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item artifacts/publish/CocktailAgent.exe dist/
+          Copy-Item scripts/install-cocktail-agent.ps1 dist/
+          Push-Location dist
+          Get-ChildItem -File | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.Name -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name } |
+            Set-Content -Path SHA256SUMS -Encoding ascii
+          Pop-Location
+          Get-Content dist/SHA256SUMS
+
+      - uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            dist/CocktailAgent.exe
+            dist/install-cocktail-agent.ps1
+
+      - name: Create the GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME dist/CocktailAgent.exe dist/install-cocktail-agent.ps1 dist/SHA256SUMS `
+            --title "ha-cocktail-agent ${{ steps.version.outputs.version }}" --notes-file release-notes.md --verify-tag

@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CocktailAgent.Core/CocktailAgent.Core.csproj" />
+    <Project Path="src/CocktailAgent/CocktailAgent.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CocktailAgent.Core.Tests/CocktailAgent.Core.Tests.csproj" />
+  </Folder>
+</Solution>

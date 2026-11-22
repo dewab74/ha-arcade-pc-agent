@@ -1,0 +1,127 @@
+# Pre-commit hooks: linting and credential-leak scanning run HERE, locally,
+# before a commit is created - not as GitHub Actions. A secret that reaches a
+# remote is already compromised; a CI job that reports it afterwards has lost.
+#
+# After cloning this repo:   pre-commit install
+# Run over everything:       pre-commit run --all-files
+# Bump pinned revs:          pre-commit autoupdate
+#
+# `git commit --no-verify` bypasses all of this. Don't use it to get past a
+# leak finding - rotate the credential instead.
+
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+fail_fast: false
+
+repos:
+  # ---- Universal hygiene -------------------------------------------------
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-json
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: detect-private-key
+      # Uncomment once the repo has real branches. It blocks committing while
+      # on main, which is a good guard on an established repo and pure friction
+      # on a fresh one whose first commit necessarily lands there.
+      # - id: no-commit-to-branch
+      #   args: [--branch, main, --branch, master]
+
+  # ---- Credential / secret leak scanning ---------------------------------
+  # Two scanners on purpose: gitleaks matches known credential shapes with
+  # almost no false positives; detect-secrets adds entropy detection for the
+  # formats nobody wrote a rule for. See SKILL.md.
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: [--baseline, .secrets.baseline]
+        # .gitleaks.toml is excluded because its allowlist necessarily
+        # contains example credential literals - the scanner would flag the
+        # config that tells the other scanner to ignore them.
+        exclude: (?x)^(
+            \.secrets\.baseline|
+            \.gitleaks\.toml|
+            .*\.lock|
+            package-lock\.json|
+            poetry\.lock|
+            uv\.lock|
+            go\.sum
+          )$
+
+  # ---- Commit message --------------------------------------------------------
+  # Conventional Commits: the changelog and release notes are built from them.
+  - repo: https://github.com/compilerla/conventional-pre-commit
+    rev: v4.4.0
+    hooks:
+      - id: conventional-pre-commit
+        stages: [commit-msg]
+
+  # ---- Bash / shell ------------------------------------------------------
+  # shellcheck-py rather than koalaman/shellcheck-precommit: the latter runs
+  # through Docker, which makes commits fail on any machine without a running
+  # daemon. This one ships a wheel and just works.
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [--severity=warning, --external-sources]
+
+  - repo: https://github.com/scop/pre-commit-shfmt
+    rev: v3.13.1-1
+    hooks:
+      - id: shfmt
+        args: [--write, --indent=2, --case-indent, --binary-next-line]
+
+  # ---- Markdown ----------------------------------------------------------
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.49.1
+    hooks:
+      - id: markdownlint-fix
+        args: [--config, .markdownlint.yaml]
+
+  # ---- .NET (the agent) and PowerShell (the installer) -------------------
+  # Local hooks: they need the .NET SDK and pwsh from the developer's machine.
+  - repo: local
+    hooks:
+      - id: dotnet-format
+        name: dotnet format (verify)
+        entry: dotnet format CocktailAgent.slnx --verify-no-changes
+        language: system
+        files: \.(cs|csproj|props|slnx)$|^\.editorconfig$
+        pass_filenames: false
+      - id: dotnet-build
+        name: dotnet build (warnings as errors)
+        entry: dotnet build CocktailAgent.slnx -warnaserror --nologo -v quiet
+        language: system
+        files: \.(cs|csproj|props|slnx|json)$|^\.editorconfig$
+        pass_filenames: false
+      - id: dotnet-test
+        name: dotnet test
+        entry: dotnet test tests/CocktailAgent.Core.Tests --nologo -v quiet
+        language: system
+        files: \.(cs|csproj|props|slnx)$
+        pass_filenames: false
+      - id: powershell-parse
+        name: powershell parse
+        entry: pwsh -NoLogo -NoProfile -File scripts/lint-powershell.ps1
+        language: system
+        files: \.(ps1|psm1|psd1)$
