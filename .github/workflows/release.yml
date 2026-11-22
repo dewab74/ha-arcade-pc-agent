@@ -52,8 +52,9 @@ jobs:
           Copy-Item artifacts/publish/CocktailAgent.exe dist/
           Copy-Item scripts/install-cocktail-agent.ps1 dist/
           Push-Location dist
-          Get-ChildItem -File | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.Name -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name } |
-            Set-Content -Path SHA256SUMS -Encoding ascii
+          # LF line endings, so `sha256sum -c` / `shasum -a 256 -c` work on Linux and macOS.
+          $lines = Get-ChildItem -File | ForEach-Object { "{0}  {1}" -f (Get-FileHash $_.Name -Algorithm SHA256).Hash.ToLowerInvariant(), $_.Name }
+          [IO.File]::WriteAllText((Join-Path $PWD 'SHA256SUMS'), (($lines -join "`n") + "`n"))
           Pop-Location
           Get-Content dist/SHA256SUMS
 
