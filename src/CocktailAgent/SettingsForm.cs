@@ -75,7 +75,9 @@ internal sealed class SettingsForm : Form
         Row("NAS share", _nasShare, @"Optional UNC path to report on, e.g. \\nas\games");
 
         var save = new Button { Text = "Save", AutoSize = true };
-        var cancel = new Button { Text = "Cancel", AutoSize = true, DialogResult = DialogResult.Cancel };
+        // The window is modeless (Show, not ShowDialog), where DialogResult does not close it.
+        var cancel = new Button { Text = "Cancel", AutoSize = true };
+        cancel.Click += (_, _) => Close();
         save.Click += (_, _) => SaveSettings();
         var buttons = new FlowLayoutPanel { FlowDirection = FlowDirection.RightToLeft, AutoSize = true, Dock = DockStyle.Fill, Margin = new Padding(0, 12, 0, 0) };
         buttons.Controls.Add(cancel);
