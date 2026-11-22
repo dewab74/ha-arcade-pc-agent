@@ -14,6 +14,9 @@ namespace CocktailAgent;
 /// </summary>
 internal sealed partial class DesktopWindow : IDisposable
 {
+    private const string ClassName = "CocktailAgentDesktop";
+    private const int ErrorClassAlreadyExists = 1410;
+
     private const uint WmSysCommand = 0x0112;
     private const uint WmDestroy = 0x0002;
     private const uint WmClose = 0x0010;
@@ -80,17 +83,24 @@ internal sealed partial class DesktopWindow : IDisposable
             Size = (uint)Marshal.SizeOf<WndClassEx>(),
             WndProc = Marshal.GetFunctionPointerForDelegate(_wndProc),
             Instance = instance,
-            ClassName = "CocktailAgentDesktop",
+            ClassName = ClassName,
         };
+        // The class points at this instance's WndProc, so each instance registers
+        // it and unregisters it when its window is gone: the agent recreates this
+        // window whenever saved settings restart it within the same process.
         if (RegisterClassExW(ref wc) == 0)
         {
-            _log.Fail($"RegisterClassEx failed: {Marshal.GetLastPInvokeError()}");
-            _ready.Set();
-            return;
+            var error = Marshal.GetLastPInvokeError();
+            if (error != ErrorClassAlreadyExists || !UnregisterClassW(ClassName, instance) || RegisterClassExW(ref wc) == 0)
+            {
+                _log.Fail($"RegisterClassEx failed: {(error == ErrorClassAlreadyExists ? Marshal.GetLastPInvokeError() : error)}");
+                _ready.Set();
+                return;
+            }
         }
 
         // Style 0 and never shown: no taskbar entry, never takes focus.
-        _hwnd = CreateWindowExW(0, "CocktailAgentDesktop", "Cocktail agent", 0, 0, 0, 0, 0, IntPtr.Zero, IntPtr.Zero, instance, IntPtr.Zero);
+        _hwnd = CreateWindowExW(0, ClassName, "Cocktail agent", 0, 0, 0, 0, 0, IntPtr.Zero, IntPtr.Zero, instance, IntPtr.Zero);
         _ready.Set();
         if (_hwnd == IntPtr.Zero)
         {
@@ -102,6 +112,11 @@ internal sealed partial class DesktopWindow : IDisposable
         {
             TranslateMessage(ref msg);
             DispatchMessageW(ref msg);
+        }
+
+        if (!UnregisterClassW(ClassName, instance))
+        {
+            _log.Warn($"UnregisterClass failed: {Marshal.GetLastPInvokeError()}");
         }
     }
 
@@ -220,6 +235,10 @@ internal sealed partial class DesktopWindow : IDisposable
 
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
     private static extern IntPtr GetModuleHandleW(string? moduleName);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool UnregisterClassW(string className, IntPtr instance);
 #pragma warning restore SYSLIB1054
 
     [LibraryImport("user32.dll")]
