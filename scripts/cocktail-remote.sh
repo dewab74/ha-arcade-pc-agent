@@ -10,7 +10,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ENV_FILE="${ROOT_DIR}/.env"
-SOCKET_DIR="${TMPDIR:-/tmp}/cocktail-agent-ssh"
+# Short on purpose: a Unix socket path must stay under ~104 characters, and
+# macOS's $TMPDIR alone is ~50.
+SOCKET_DIR="/tmp/cocktail-agent-ssh-$(id -u)"
 
 if [[ -f "${ENV_FILE}" ]]; then
   set -a
