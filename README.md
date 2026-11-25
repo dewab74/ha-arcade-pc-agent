@@ -10,6 +10,9 @@ A small Windows tray app that lets [Home Assistant](https://www.home-assistant.i
 control an arcade or game PC running [LaunchBox / BigBox](https://www.launchbox-app.com/)
 over MQTT.
 
+Why I built it, on my blog:
+[My arcade cabinet never slept](https://danielwhicker.com/2026/11/arcade-cabinet-home-assistant/).
+
 Point it at your MQTT broker and a **Arcade PC** device appears in Home
 Assistant through
 [MQTT discovery](https://www.home-assistant.io/integrations/mqtt/#mqtt-discovery),
